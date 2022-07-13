@@ -1,0 +1,5 @@
+server_address: ":8080"
+log_level: "debug"
+
+store:
+  connection_string: "host=localhost dbname=urlshortener sslmode=disable"
