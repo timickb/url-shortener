@@ -2,19 +2,21 @@ package store
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	_ "github.com/lib/pq"
+	"github.com/sirupsen/logrus"
 	"github.com/timickb/url-shortener/internal/app/algorithm"
 )
 
 type DbStore struct {
-	config *Config
-	db     *sql.DB
-	local  map[string]Recording
+	maxUrlLength     int
+	connectionString string
+	db               *sql.DB
 }
 
 func (store *DbStore) Open() error {
-	db, err := sql.Open("postgres", store.config.ConnectionString)
+	db, err := sql.Open("postgres", store.connectionString)
 
 	if err != nil {
 		return err
@@ -25,7 +27,7 @@ func (store *DbStore) Open() error {
 	}
 
 	store.db = db
-	fmt.Println("DB connected")
+	logrus.Info("Database connection set")
 	return nil
 }
 
@@ -39,11 +41,30 @@ func (store *DbStore) Close() error {
 }
 
 func (store *DbStore) CreateLink(url string) (string, error) {
+	if len(url) > store.maxUrlLength {
+		return "", errors.New(fmt.Sprintf("maximum URL length is %s", url))
+	}
+
 	hash := algorithm.ComputeHash(url)
-	// db
+
+	row := store.db.QueryRow("INSERT INTO Recordings (original, shortened) VALUES($1, $2) ON CONFLICT DO NOTHING",
+		url, hash)
+
+	if row.Err() != nil {
+		return "", row.Err()
+	}
+
 	return hash, nil
 }
 
 func (store *DbStore) RestoreLink(hash string) (string, error) {
-	return "https://example.com", nil
+	var original string
+
+	err := store.db.QueryRow("SELECT original FROM Recordings WHERE shortened = $1", hash).Scan(&original)
+
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("shortening %s doesn't exist", hash))
+	}
+
+	return original, nil
 }

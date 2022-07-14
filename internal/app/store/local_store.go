@@ -1,29 +1,20 @@
 package store
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/timickb/url-shortener/internal/app/algorithm"
-	"time"
-
 	_ "github.com/lib/pq"
+	"github.com/timickb/url-shortener/internal/app/algorithm"
 )
 
-type Recording struct {
-	Original  string
-	Shortened string
-	Created   time.Time
-}
-
 type LocalStore struct {
-	config *Config
-	db     *sql.DB
-	local  map[string]Recording
+	maxUrlLength int
+	// key -> shortened url, value -> original url
+	memoryStorage map[string]string
 }
 
 func (store *LocalStore) Open() error {
-	store.local = make(map[string]Recording)
+	store.memoryStorage = make(map[string]string)
 	return nil
 }
 
@@ -32,29 +23,34 @@ func (store *LocalStore) Close() error {
 }
 
 func (store *LocalStore) CreateLink(url string) (string, error) {
-	hash := algorithm.ComputeHash(url)
-	value, ok := store.local[hash]
-
-	if ok {
-		return "", errors.New(
-			fmt.Sprintf("local_store: such shortening already exists for url %s", value))
+	if len(url) > store.maxUrlLength {
+		return "", errors.New(fmt.Sprintf("maximum URL length is %s", url))
 	}
 
-	store.local[hash] = Recording{
-		Original:  url,
-		Shortened: hash,
-		Created:   time.Now(),
+	hash := algorithm.ComputeHash(url)
+
+	value, ok := store.memoryStorage[hash]
+
+	// If hash exists and its original is different -> collision
+	if ok && url != value {
+		return "", errors.New(fmt.Sprintf("collision happened with url %s", value))
+	}
+
+	// If hash exists and its original is same -> do nothing
+
+	if !ok {
+		store.memoryStorage[hash] = url
 	}
 
 	return hash, nil
 }
 
 func (store *LocalStore) RestoreLink(hash string) (string, error) {
-	value, ok := store.local[hash]
+	value, ok := store.memoryStorage[hash]
 
 	if ok {
-		return value.Original, nil
+		return value, nil
 	}
 
-	return "", errors.New("local_store: shortening doesn't exist")
+	return "", errors.New(fmt.Sprintf("shortening %s doesn't exist", hash))
 }

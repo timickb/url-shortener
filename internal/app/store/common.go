@@ -2,13 +2,11 @@ package store
 
 import (
 	"errors"
-	"io"
 )
 
 type Store interface {
-	io.Closer
-
 	Open() error
+	Close() error
 
 	// CreateLink Creates new URL shorting recording
 	CreateLink(string) (string, error)
@@ -17,12 +15,20 @@ type Store interface {
 	RestoreLink(string) (string, error)
 }
 
-func NewStore(config *Config, storeImpl string) (Store, error) {
+func NewStore(connectionString string, storeImpl string, maxUrlLength int) (Store, error) {
 	switch storeImpl {
+
 	case "local":
-		return &LocalStore{config: config}, nil
+		return &LocalStore{maxUrlLength: maxUrlLength}, nil
+
 	case "db":
-		return &DbStore{config: config}, nil
+		return &DbStore{
+			connectionString: connectionString,
+			maxUrlLength:     maxUrlLength}, nil
+
+	case "test":
+		return &TestStore{}, nil
+
 	default:
 		return nil, errors.New("store: incorrect impl parameter")
 	}
