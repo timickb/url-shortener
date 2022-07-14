@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 
-	"github.com/timickb/url-shortener/internal/app/urlapi"
+	"github.com/timickb/url-shortener/internal/app/server"
 	"gopkg.in/yaml.v3"
 )
 
@@ -22,7 +22,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	config := urlapi.DefaultConfig()
+	config := server.DefaultConfig()
 
 	configContent, ioErr := ioutil.ReadFile(configPath)
 
@@ -30,17 +30,14 @@ func main() {
 		log.Fatal(ioErr)
 	}
 
-	yamlErr := yaml.Unmarshal(configContent, &config)
-
-	if yamlErr != nil {
-		log.Fatal(yamlErr)
+	if err := yaml.Unmarshal(configContent, &config); err != nil {
+		log.Fatal(err)
 	}
 
-	server := urlapi.NewServer(config)
+	config.StoreImpl = storeImpl
+	srv := server.NewServer(config)
 
-	err := server.Start(storeImpl)
-
-	if err != nil {
+	if err := srv.Start(); err != nil {
 		log.Fatal(err)
 	}
 }
