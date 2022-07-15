@@ -1,7 +1,7 @@
 package server
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -10,41 +10,49 @@ import (
 )
 
 type Server struct {
-	config *Config
-	router *mux.Router
-	store  store.Store
+	config           *Config
+	router           *mux.Router
+	store            store.Store
+	connectionString string
 }
 
 func NewServer(config *Config) *Server {
-	serv := &Server{
+	srv := &Server{
 		config: config,
 		router: mux.NewRouter(),
 	}
 
-	serv.ConfigureRouter()
-	return serv
+	srv.connectionString = fmt.Sprintf("host=%s port=%d user=%s password=\"%s\" dbname=%s sslmode=disable",
+		srv.config.Database.DbHost,
+		srv.config.Database.DbPort,
+		srv.config.Database.DbUser,
+		srv.config.Database.DbPassword,
+		srv.config.Database.DbName)
+
+	srv.ConfigureRouter()
+
+	return srv
 }
 
 func (server *Server) Start() error {
-	defer func(store store.Store) {
-		err := store.Close()
-		if err != nil {
-			log.Fatal(err)
-		}
-	}(server.store)
 
-	logrus.Info("Starting server")
+	logrus.Info(fmt.Sprintf("Starting server on %s", server.config.ServerAddress))
 
 	if err := server.ConfigureStore(); err != nil {
 		return err
 	}
 
+	defer func(store store.Store) {
+		_ = store.Close()
+	}(server.store)
+
 	return http.ListenAndServe(server.config.ServerAddress, server.router)
 }
 
 func (server *Server) ConfigureStore() error {
+	logrus.Info(fmt.Sprintf("Configuring store %s", server.config.StoreImpl))
 	st, stErr := store.NewStore(
-		server.config.ConnectionString,
+		server.connectionString,
 		server.config.StoreImpl,
 		server.config.MaxUrlLength)
 
