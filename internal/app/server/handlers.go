@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 )
 
@@ -31,6 +32,11 @@ func (server *Server) handleCreate() http.HandlerFunc {
 		req := &createRequest{}
 		if err := json.NewDecoder(request.Body).Decode(req); err != nil {
 			server.error(writer, http.StatusBadRequest, err)
+			return
+		}
+
+		if req.Url == "" {
+			server.error(writer, http.StatusBadRequest, errors.New("cannot parse empty string"))
 			return
 		}
 
