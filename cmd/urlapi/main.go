@@ -16,7 +16,7 @@ var (
 
 func init() {
 	flag.StringVar(&configPath, "config-path", "config/server.yaml", "Path to config file")
-	flag.StringVar(&storeImpl, "store", "local", "Data storage way")
+	flag.StringVar(&storeImpl, "store", "db", "Data storage way")
 }
 
 func main() {
