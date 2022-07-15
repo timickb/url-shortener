@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:14.3-alpine
+    restart: always
+    volumes:
+      - ./.postgres_data/:/var/lib/postgresql/data
+    ports:
+      - "5436:5432"
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_HOST_AUTH_METHOD: trust
+
+  migrate:
+    image: migrate/migrate
+    entrypoint: "migrate -path /tmp/migrations -database postgresql://${DB_USER}@db/${DB_NAME}?sslmode=${SSL_MODE}"
+    command: up
+    restart: on-failure
+    depends_on:
+      - db
+    volumes:
+      - ./migrations:/tmp/migrations
+
+  url-shortener-api:
+    restart: on-failure
+    build: ./
+    command: ./artifacts/bin/urlapi
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+      - migrate
+    tty: true
