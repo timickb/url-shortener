@@ -42,10 +42,10 @@ func (store *DbStore) Close() error {
 
 func (store *DbStore) CreateLink(url string) (string, error) {
 	if len(url) > store.maxUrlLength {
-		return "", errors.New(fmt.Sprintf("maximum URL length is %s", url))
+		return "", errors.New(fmt.Sprintf("maximum URL length is %d", store.maxUrlLength))
 	}
 
-	hash := algorithm.ComputeHash(url)
+	hash := algorithm.ComputeHash(url, 10)
 
 	row := store.db.QueryRow("INSERT INTO Recordings (original, shortened) VALUES($1, $2) ON CONFLICT DO NOTHING",
 		url, hash)

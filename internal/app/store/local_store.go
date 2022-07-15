@@ -24,10 +24,10 @@ func (store *LocalStore) Close() error {
 
 func (store *LocalStore) CreateLink(url string) (string, error) {
 	if len(url) > store.maxUrlLength {
-		return "", errors.New(fmt.Sprintf("maximum URL length is %s", url))
+		return "", errors.New(fmt.Sprintf("maximum URL length is %d", store.maxUrlLength))
 	}
 
-	hash := algorithm.ComputeHash(url)
+	hash := algorithm.ComputeHash(url, 10)
 
 	value, ok := store.memoryStorage[hash]
 
