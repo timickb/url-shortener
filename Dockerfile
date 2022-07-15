@@ -1,16 +1,15 @@
-FROM golang:latest
+FROM golang:1.18.4-alpine3.16 AS builder
 
-RUN go version
-ENV GOPATH=/
+WORKDIR /usr/local/go/src/
 
-COPY ./ ./
+ADD ./ /usr/local/go/src/
 
-RUN apt update
-RUN apt -y install postgresql-client
+RUN go clean --modcache
+RUN go build -mod=readonly -o app cmd/urlapi/main.go
 
-RUN chmod +x wait-for-postgres.sh
+FROM alpine:latest
 
-RUN go mod download
-RUN make
+COPY --from=builder /usr/local/go/src/app /
+COPY --from=builder /usr/local/go/src/config.yml /
 
-CMD ["./artifacts/bin/urlapi"]
+CMD ["/app", "-config-source=env"]

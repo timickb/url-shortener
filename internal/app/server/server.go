@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
@@ -36,7 +37,7 @@ func NewServer(config *Config) *Server {
 
 func (server *Server) Start() error {
 
-	logrus.Info(fmt.Sprintf("Starting server on %s", server.config.ServerAddress))
+	logrus.Info(fmt.Sprintf("Starting server on port %d", server.config.ServerPort))
 
 	if err := server.ConfigureStore(); err != nil {
 		return err
@@ -46,7 +47,7 @@ func (server *Server) Start() error {
 		_ = store.Close()
 	}(server.store)
 
-	return http.ListenAndServe(server.config.ServerAddress, server.router)
+	return http.ListenAndServe(":"+strconv.Itoa(server.config.ServerPort), server.router)
 }
 
 func (server *Server) ConfigureStore() error {
@@ -70,6 +71,7 @@ func (server *Server) ConfigureStore() error {
 }
 
 func (server *Server) ConfigureRouter() {
+	// server.router.Headers("Content-Type", "application/json")
 	server.router.HandleFunc("/create", server.handleCreate()).Methods("POST")
 	server.router.HandleFunc("/restore", server.handleRestore()).Methods("GET")
 }

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
 	"github.com/timickb/url-shortener/internal/app/algorithm"
@@ -45,13 +46,13 @@ func (store *DbStore) CreateLink(url string) (string, error) {
 		return "", errors.New(fmt.Sprintf("maximum URL length is %d", store.maxUrlLength))
 	}
 
-	hash := algorithm.ComputeHash(url, 10)
+	hash := algorithm.ComputeShortening(url)
 
-	row := store.db.QueryRow("INSERT INTO Recordings (original, shortened) VALUES($1, $2) ON CONFLICT DO NOTHING",
+	_, err := store.db.Exec("INSERT INTO Recordings (original, shortened) VALUES($1, $2) ON CONFLICT DO NOTHING",
 		url, hash)
 
-	if row.Err() != nil {
-		return "", row.Err()
+	if err != nil {
+		return "", err
 	}
 
 	return hash, nil

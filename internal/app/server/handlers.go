@@ -11,7 +11,6 @@ func (server *Server) error(wr http.ResponseWriter, status int, err error) {
 
 func (server *Server) makeResponse(wr http.ResponseWriter, status int, data interface{}) {
 	wr.WriteHeader(status)
-	wr.Header().Set("Content-Type", "application/json")
 
 	if data != nil {
 		_ = json.NewEncoder(wr).Encode(data)
@@ -27,6 +26,8 @@ func (server *Server) handleCreate() http.HandlerFunc {
 	}
 
 	return func(writer http.ResponseWriter, request *http.Request) {
+		writer.Header().Set("Content-Type", "application/json")
+
 		req := &createRequest{}
 		if err := json.NewDecoder(request.Body).Decode(req); err != nil {
 			server.error(writer, http.StatusBadRequest, err)
@@ -34,6 +35,7 @@ func (server *Server) handleCreate() http.HandlerFunc {
 		}
 
 		result, err := server.store.CreateLink(req.Url)
+		go server.store.CreateLink(req.Url)
 
 		if err != nil {
 			server.error(writer, http.StatusBadRequest, err)
@@ -50,6 +52,8 @@ func (server *Server) handleRestore() http.HandlerFunc {
 	}
 
 	return func(writer http.ResponseWriter, request *http.Request) {
+		writer.Header().Set("Content-Type", "application/json")
+
 		hash := request.FormValue("hash")
 
 		result, err := server.store.RestoreLink(hash)

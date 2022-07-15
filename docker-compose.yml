@@ -1,9 +1,10 @@
-version: '3.8'
+version: '3.9'
 
 services:
   db:
     image: postgres:14.3-alpine
-    restart: always
+    command: postgres -c 'max_connections=1000'
+    restart: on-failure
     volumes:
       - ./.postgres_data/:/var/lib/postgresql/data
     ports:
@@ -24,13 +25,21 @@ services:
     volumes:
       - ./migrations:/tmp/migrations
 
-  url-shortener-api:
+  api:
+    image: url_shortener_api:latest
+    container_name: api
     restart: on-failure
     build: ./
-    command: ./artifacts/bin/urlapi
+    command: /app -config-source=env
     ports:
-      - "8080:8080"
+      - "9000:8080"
     depends_on:
       - db
       - migrate
+    environment:
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_USER: ${DB_USER}
+      DB_NAME: ${DB_NAME}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
     tty: true

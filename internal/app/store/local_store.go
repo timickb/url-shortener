@@ -27,7 +27,7 @@ func (store *LocalStore) CreateLink(url string) (string, error) {
 		return "", errors.New(fmt.Sprintf("maximum URL length is %d", store.maxUrlLength))
 	}
 
-	hash := algorithm.ComputeHash(url, 10)
+	hash := algorithm.ComputeShortening(url)
 
 	value, ok := store.memoryStorage[hash]
 

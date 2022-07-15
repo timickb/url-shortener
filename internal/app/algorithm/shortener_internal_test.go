@@ -1,23 +1,37 @@
 package algorithm
 
 import (
-	"github.com/stretchr/testify/assert"
-	"log"
+	"fmt"
 	"testing"
 )
 
-func Test_ComputeHash(t *testing.T) {
+func TestComputeShortening_functionality(t *testing.T) {
 	t.Helper()
 
-	url1 := "http://example.com"
-	url2 := "https://google.com"
+	hash := ComputeShortening("https://minecraft.net")
+	for i := 0; i < 10; i++ {
+		if ComputeShortening("https://minecraft.net") != hash {
+			t.Fail()
+		}
+	}
+}
 
-	hash1 := ComputeHash(url1)
-	hash2 := ComputeHash(url2)
+func TestComputeShortening_bijection(t *testing.T) {
+	t.Helper()
 
-	log.Println(hash1)
-	log.Println(hash2)
+	storage := make(map[string]string)
 
-	assert.NotEqual(t, hash1, hash2)
+	for i := 0; i < 10000; i++ {
+		url := fmt.Sprintf("https://example%d.com", i+1)
+		hash := ComputeShortening(url)
 
+		fmt.Println(hash)
+
+		if value, ok := storage[hash]; ok {
+			fmt.Printf("Collision found: %s and %s\n", value, url)
+			t.Fail()
+		}
+
+		storage[hash] = url
+	}
 }

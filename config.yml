@@ -1,0 +1,9 @@
+server_port: 80
+max_url_length: 300
+
+database:
+  db_host: "localhost"
+  db_name: "urlshortener"
+  db_user: "timickb"
+  db_password: ""
+  db_port: 5432
