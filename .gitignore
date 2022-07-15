@@ -18,6 +18,7 @@ vendor/
 .idea/
 .vscode/
 artifacts/
+.postgres_data/
 
 coverage.out
 
