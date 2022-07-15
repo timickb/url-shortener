@@ -1,3 +1,10 @@
 server_address: ":8080"
-max_url_length: 120
-connection_string: "host=localhost dbname=urlshortener sslmode=disable"
+max_url_length: 10
+connection_string: "host=localhost dbname=urlshortener user=timickb password=\"\" port=5432 sslmode=disable"
+
+database:
+  db_host: "db"
+  db_name: "url_shortener"
+  db_user: "database"
+  db_password: "example"
+  db_port: 5432
