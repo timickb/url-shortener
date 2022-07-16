@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -26,6 +27,8 @@ func main() {
 
 	config := server.DefaultConfig()
 
+	config.StoreImpl = storeImpl
+
 	if configSource == "file" {
 		log.Println("Reading configuration from config.yml")
 		parseConfigFromFile(config)
@@ -33,10 +36,9 @@ func main() {
 		log.Println("Reading configuration from environment")
 		parseConfigFromEnvironment(config)
 	} else {
-		panic("incorrect config source. Use 'file' or 'env'")
+		panic(fmt.Sprintf("incorrect config source %s. Use 'file' or 'env'", configSource))
 	}
 
-	config.StoreImpl = storeImpl
 	srv, err := server.NewServer(config)
 
 	if err != nil {
@@ -72,5 +74,9 @@ func parseConfigFromEnvironment(config *server.Config) {
 	}
 	if os.Getenv("MAX_URL_LENGTH") != "" {
 		config.MaxUrlLength, _ = strconv.Atoi(os.Getenv("MAX_URL_LENGTH"))
+	}
+
+	if os.Getenv("STORE_WAY") != "" {
+		config.StoreImpl = os.Getenv("STORE_WAY")
 	}
 }
