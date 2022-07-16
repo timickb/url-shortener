@@ -1,3 +1,4 @@
+[![Docker Image Size](https://badgen.net/docker/stars/timickb/url_shortener_api?icon=docker&label=stars)](https://hub.docker.com/r/timickb/url_shortener_api/)
 [![Build Status](https://app.travis-ci.com/timickb/url-shortener.svg?branch=dev)](https://app.travis-ci.com/timickb/url-shortener)
 [![codecov](https://codecov.io/gh/timickb/url-shortener/branch/dev/graph/badge.svg?token=TLEXMS8EJA)](https://codecov.io/gh/timickb/url-shortener)
 
