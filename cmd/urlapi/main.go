@@ -37,7 +37,11 @@ func main() {
 	}
 
 	config.StoreImpl = storeImpl
-	srv := server.NewServer(config)
+	srv, err := server.NewServer(config)
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	if err := srv.Start(); err != nil {
 		log.Fatal(err)

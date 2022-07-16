@@ -17,7 +17,7 @@ type Server struct {
 	connectionString string
 }
 
-func NewServer(config *Config) *Server {
+func NewServer(config *Config) (*Server, error) {
 	srv := &Server{
 		config: config,
 		router: mux.NewRouter(),
@@ -30,18 +30,18 @@ func NewServer(config *Config) *Server {
 		srv.config.Database.DbPassword,
 		srv.config.Database.DbName)
 
+	if err := srv.ConfigureStore(); err != nil {
+		return nil, err
+	}
+
 	srv.ConfigureRouter()
 
-	return srv
+	return srv, nil
 }
 
 func (server *Server) Start() error {
 
 	logrus.Info(fmt.Sprintf("Starting server on port %d", server.config.ServerPort))
-
-	if err := server.ConfigureStore(); err != nil {
-		return err
-	}
 
 	defer func(store store.Store) {
 		_ = store.Close()
@@ -52,6 +52,7 @@ func (server *Server) Start() error {
 
 func (server *Server) ConfigureStore() error {
 	logrus.Info(fmt.Sprintf("Configuring store %s", server.config.StoreImpl))
+
 	st, stErr := store.NewStore(
 		server.connectionString,
 		server.config.StoreImpl,
@@ -71,7 +72,6 @@ func (server *Server) ConfigureStore() error {
 }
 
 func (server *Server) ConfigureRouter() {
-	// server.router.Headers("Content-Type", "application/json")
 	server.router.HandleFunc("/create", server.handleCreate()).Methods("POST")
 	server.router.HandleFunc("/restore", server.handleRestore()).Methods("GET")
 }
