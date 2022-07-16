@@ -26,10 +26,10 @@ services:
       - ./migrations:/tmp/migrations
 
   api:
-    image: url_shortener_api:latest
+    image: timickb/url_shortener_api:latest
+    build: ./
     container_name: api
     restart: on-failure
-    build: ./
     command: /app -config-source=env
     ports:
       - "9000:8080"
