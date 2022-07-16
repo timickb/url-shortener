@@ -30,7 +30,7 @@ services:
     build: ./
     container_name: api
     restart: on-failure
-    command: /app -config-source=env
+    command: /app -config-source=env -store=db
     ports:
       - "9000:8080"
     depends_on:

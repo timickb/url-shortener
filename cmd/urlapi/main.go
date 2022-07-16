@@ -18,7 +18,7 @@ var (
 
 func init() {
 	flag.StringVar(&configSource, "config-source", "env", "Where to search config: file (config.yml) or OS env")
-	flag.StringVar(&storeImpl, "store", "db", "Data storage way")
+	flag.StringVar(&storeImpl, "store", "local", "Data storage way")
 }
 
 func main() {

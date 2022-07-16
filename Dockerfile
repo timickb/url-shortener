@@ -12,4 +12,4 @@ FROM alpine:latest
 COPY --from=builder /usr/local/go/src/app /
 COPY --from=builder /usr/local/go/src/config.yml /
 
-CMD ["/app", "-config-source=env"]
+CMD ["/app", "-config-source=env -store=local"]
