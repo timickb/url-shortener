@@ -12,4 +12,5 @@ FROM alpine:latest
 COPY --from=builder /usr/local/go/src/app /
 COPY --from=builder /usr/local/go/src/config.yml /
 
-CMD ["/app", "-config-source=env -store=local"]
+EXPOSE 8080
+CMD ["/app", "-config-source=env", "-store=local"]
