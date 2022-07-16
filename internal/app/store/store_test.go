@@ -2,9 +2,60 @@ package store
 
 import (
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/stretchr/testify/assert"
 	"github.com/timickb/url-shortener/internal/app/algorithm"
+	"reflect"
 	"testing"
 )
+
+func TestNewStore(t *testing.T) {
+	st1, err1 := NewStore("", "local", 300)
+	st2, err2 := NewStore("", "db", 300)
+	st3, err3 := NewStore("", "test", 300)
+
+	if err1 != nil || err2 != nil || err3 != nil {
+		t.Fatalf("error occured while creating store instances")
+	}
+
+	assert.Equal(t, reflect.TypeOf(&LocalStore{}), reflect.TypeOf(st1))
+	assert.Equal(t, reflect.TypeOf(&DbStore{}), reflect.TypeOf(st2))
+	assert.Equal(t, reflect.TypeOf(&MockStore{}), reflect.TypeOf(st3))
+}
+
+func TestLocalStore_RestoreLink(t *testing.T) {
+	st, err := NewStore("", "local", 300)
+
+	if err != nil {
+		t.Fatalf("error occurred while creating local store instance")
+	}
+
+	st.Open()
+	link := "https://abc.xyz"
+	hash := algorithm.ComputeShortening(link)
+
+	_, _ = st.CreateLink(link)
+	result, _ := st.RestoreLink(hash)
+
+	assert.Equal(t, link, result)
+
+}
+
+func TestLocalStore_CreateLink(t *testing.T) {
+	st, err := NewStore("", "local", 300)
+
+	if err != nil {
+		t.Fatalf("error occurred while creating local store instance")
+	}
+
+	st.Open()
+	link := "https://abc.xyz"
+	hash := algorithm.ComputeShortening(link)
+
+	result, _ := st.CreateLink(link)
+
+	assert.Equal(t, hash, result)
+
+}
 
 func TestDbStore_RestoreLink_DoesntExist(t *testing.T) {
 	db, mock, err := sqlmock.New()
