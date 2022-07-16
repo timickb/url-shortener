@@ -1,19 +1,19 @@
 package store
 
-type TestStore struct{}
+type MockStore struct{}
 
-func (t TestStore) Open() error {
+func (t MockStore) Open() error {
 	return nil
 }
 
-func (t TestStore) Close() error {
+func (t MockStore) Close() error {
 	return nil
 }
 
-func (t TestStore) CreateLink(s string) (string, error) {
+func (t MockStore) CreateLink(s string) (string, error) {
 	return "t3st_h4sh_", nil
 }
 
-func (t TestStore) RestoreLink(s string) (string, error) {
+func (t MockStore) RestoreLink(s string) (string, error) {
 	return "https://example.com", nil
 }

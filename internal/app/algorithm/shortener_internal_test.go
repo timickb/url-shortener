@@ -25,8 +25,6 @@ func TestComputeShortening_bijection(t *testing.T) {
 		url := fmt.Sprintf("https://example%d.com", i+1)
 		hash := ComputeShortening(url)
 
-		fmt.Println(hash)
-
 		if value, ok := storage[hash]; ok {
 			fmt.Printf("Collision found: %s and %s\n", value, url)
 			t.Fail()

@@ -1,6 +1,7 @@
 package store
 
 import (
+	"database/sql"
 	"errors"
 )
 
@@ -15,6 +16,13 @@ type Store interface {
 	RestoreLink(string) (string, error)
 }
 
+func NewDBStore(db *sql.DB) *DbStore {
+	return &DbStore{
+		db:           db,
+		maxUrlLength: 300,
+	}
+}
+
 func NewStore(connectionString string, storeImpl string, maxUrlLength int) (Store, error) {
 	switch storeImpl {
 
@@ -27,7 +35,7 @@ func NewStore(connectionString string, storeImpl string, maxUrlLength int) (Stor
 			maxUrlLength:     maxUrlLength}, nil
 
 	case "test":
-		return &TestStore{}, nil
+		return &MockStore{}, nil
 
 	default:
 		return nil, errors.New("store: incorrect impl parameter")

@@ -41,8 +41,7 @@ func (server *Server) handleCreate() http.HandlerFunc {
 		}
 
 		result, err := server.store.CreateLink(req.Url)
-		go server.store.CreateLink(req.Url)
-
+		
 		if err != nil {
 			server.error(writer, http.StatusBadRequest, err)
 			return

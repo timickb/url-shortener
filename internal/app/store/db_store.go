@@ -17,17 +17,20 @@ type DbStore struct {
 }
 
 func (store *DbStore) Open() error {
-	db, err := sql.Open("postgres", store.connectionString)
+	if store.db == nil {
+		db, err := sql.Open("postgres", store.connectionString)
 
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
+
+		if err := db.Ping(); err != nil {
+			return err
+		}
+
+		store.db = db
 	}
 
-	if err := db.Ping(); err != nil {
-		return err
-	}
-
-	store.db = db
 	logrus.Info("Database connection set")
 	return nil
 }
@@ -48,7 +51,7 @@ func (store *DbStore) CreateLink(url string) (string, error) {
 
 	hash := algorithm.ComputeShortening(url)
 
-	_, err := store.db.Exec("INSERT INTO Recordings (original, shortened) VALUES($1, $2) ON CONFLICT DO NOTHING",
+	_, err := store.db.Exec("INSERT INTO recordings (original, shortened) VALUES(?, ?) ON CONFLICT DO NOTHING",
 		url, hash)
 
 	if err != nil {
@@ -61,7 +64,7 @@ func (store *DbStore) CreateLink(url string) (string, error) {
 func (store *DbStore) RestoreLink(hash string) (string, error) {
 	var original string
 
-	err := store.db.QueryRow("SELECT original FROM Recordings WHERE shortened = $1", hash).Scan(&original)
+	err := store.db.QueryRow("SELECT original FROM recordings WHERE shortened = $1", hash).Scan(&original)
 
 	if err != nil {
 		return "", errors.New(fmt.Sprintf("shortening %s doesn't exist", hash))
