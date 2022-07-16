@@ -38,4 +38,4 @@ Response example:
 }
 ```
 
-* `GET /restore?shortened=[hash]` - restores an original string by given `hash`
+* `GET /restore?hash=[hash]` - restores an original string by given `hash`
