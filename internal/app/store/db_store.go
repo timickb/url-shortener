@@ -51,7 +51,7 @@ func (store *DbStore) CreateLink(url string) (string, error) {
 
 	hash := algorithm.ComputeShortening(url)
 
-	_, err := store.db.Exec("INSERT INTO recordings (original, shortened) VALUES(?, ?) ON CONFLICT DO NOTHING",
+	_, err := store.db.Exec("INSERT INTO recordings (original, shortened) VALUES($1, $2) ON CONFLICT DO NOTHING",
 		url, hash)
 
 	if err != nil {
