@@ -12,6 +12,9 @@
 `-store` may be `local` or `db`. If chosen `local`, server will use in-memory
 storage for URL shortenings. If chosen `db`, PostgreSQL will be used.
 
+`-config-source` may be `env` or `file`. If `env` chosen, config parameters will be taken from environment variables,
+if `file` - from file `config.yml`
+
 ## Run in docker
 
 `docker pull timickb/url_shortener_api:latest` - pulls repository
