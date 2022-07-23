@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"sync"
 )
 
 func (server *Server) error(wr http.ResponseWriter, status int, err error) {
@@ -27,6 +28,8 @@ func (server *Server) handleCreate() http.HandlerFunc {
 	}
 
 	return func(writer http.ResponseWriter, request *http.Request) {
+		var wg sync.WaitGroup
+		wg.Add(1)
 		writer.Header().Set("Content-Type", "application/json")
 
 		req := &createRequest{}
@@ -40,15 +43,17 @@ func (server *Server) handleCreate() http.HandlerFunc {
 			return
 		}
 
-		result, err := server.store.CreateLink(req.Url)
-		
-		if err != nil {
-			server.error(writer, http.StatusBadRequest, err)
-			return
-		}
-		server.makeResponse(writer, http.StatusOK, &createResponse{Hash: result})
+		go func(wg *sync.WaitGroup) {
+			result, err := server.store.CreateLink(req.Url)
+			if err != nil {
+				server.error(writer, http.StatusBadRequest, err)
+				return
+			}
+			server.makeResponse(writer, http.StatusOK, &createResponse{Hash: result})
+			wg.Done()
+		}(&wg)
+		wg.Wait()
 	}
-
 }
 
 func (server *Server) handleRestore() http.HandlerFunc {
