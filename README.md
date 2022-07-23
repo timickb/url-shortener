@@ -9,8 +9,11 @@
 
 `./artifacts/bin/urlapi -store=[store_type] -config-source=[conf_source]` - run the API server
 
-`-store` may be `local` or `db`. If chosen `local`, server will use in-memory
-storage for URL shortenings. If chosen `db`, PostgreSQL will be used.
+`-store` may be `local`, `db` or `improved`. 
+
+* `local` server will use in-memory storage for URL shortenings.
+* `db` server will use PostgreSQL to store data
+* `improved` server will use both PostgreSQL and in-memory storage to improve URL restoring efficiency.
 
 `-config-source` may be `env` or `file`. If `env` chosen, config parameters will be taken from environment variables,
 if `file` - from file `config.yml`
