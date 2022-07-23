@@ -3,6 +3,7 @@ package store
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 )
 
 type Store interface {
@@ -16,13 +17,6 @@ type Store interface {
 	RestoreLink(string) (string, error)
 }
 
-func NewDBStore(db *sql.DB) *DbStore {
-	return &DbStore{
-		db:           db,
-		maxUrlLength: 300,
-	}
-}
-
 func NewStore(connectionString string, storeImpl string, maxUrlLength int) (Store, error) {
 	switch storeImpl {
 
@@ -34,10 +28,34 @@ func NewStore(connectionString string, storeImpl string, maxUrlLength int) (Stor
 			connectionString: connectionString,
 			maxUrlLength:     maxUrlLength}, nil
 
+	case "improved":
+		db, err := sql.Open("postgres", connectionString)
+		if err != nil {
+			fmt.Println("couldn't create database connection")
+		}
+		return &ImprovedStore{
+			db:           db,
+			maxUrlLength: 300,
+		}, nil
+
 	case "test":
 		return &MockStore{}, nil
 
 	default:
 		return nil, errors.New("store: incorrect impl parameter")
+	}
+}
+
+func NewDBStore(db *sql.DB) *DbStore {
+	return &DbStore{
+		db:           db,
+		maxUrlLength: 300,
+	}
+}
+
+func NewImprovedStore(db *sql.DB) *ImprovedStore {
+	return &ImprovedStore{
+		db:           db,
+		maxUrlLength: 300,
 	}
 }

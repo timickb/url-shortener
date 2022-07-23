@@ -3,6 +3,7 @@ package store
 import (
 	"errors"
 	"fmt"
+
 	_ "github.com/lib/pq"
 	"github.com/timickb/url-shortener/internal/app/algorithm"
 )
@@ -24,7 +25,7 @@ func (store *LocalStore) Close() error {
 
 func (store *LocalStore) CreateLink(url string) (string, error) {
 	if len(url) > store.maxUrlLength {
-		return "", errors.New(fmt.Sprintf("maximum URL length is %d", store.maxUrlLength))
+		return "", fmt.Errorf("maximum URL length is %d", store.maxUrlLength)
 	}
 
 	hash := algorithm.ComputeShortening(url)
@@ -33,7 +34,7 @@ func (store *LocalStore) CreateLink(url string) (string, error) {
 
 	// If hash exists and its original is different -> collision
 	if ok && url != value {
-		return "", errors.New(fmt.Sprintf("collision happened with url %s", value))
+		return "", fmt.Errorf("collision happened with url %s", value)
 	}
 
 	// If hash exists and its original is same -> do nothing
