@@ -14,12 +14,14 @@ import (
 
 var (
 	configSource string
+	configPath   string
 	storeImpl    string
 )
 
 func init() {
-	flag.StringVar(&configSource, "config-source", "env", "Where to search config: file (config.yml) or OS env")
-	flag.StringVar(&storeImpl, "store", "local", "Data storage way")
+	flag.StringVar(&configPath, "config-path", "config.yml", "path to config in filesystem")
+	flag.StringVar(&configSource, "config-source", "env", "config params source priority: env or file")
+	flag.StringVar(&storeImpl, "store", "local", "Data storage way: local, db or improved")
 }
 
 func main() {
@@ -51,7 +53,11 @@ func main() {
 }
 
 func parseConfigFromFile(config *server.Config) {
-	configContent, ioErr := ioutil.ReadFile("config.yml")
+	if configPath == "" {
+		configPath = "config.yml"
+	}
+
+	configContent, ioErr := ioutil.ReadFile(configPath)
 
 	if ioErr != nil {
 		log.Fatal(ioErr)
