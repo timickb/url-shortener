@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/sirupsen/logrus"
 	"github.com/timickb/url-shortener/internal/app/server"
 	"gopkg.in/yaml.v3"
 )
@@ -25,12 +26,15 @@ func init() {
 }
 
 func main() {
+	logger := logrus.New()
+
 	flag.Parse()
 
 	config := server.DefaultConfig()
 
 	config.StoreImpl = storeImpl
 
+	// Parsing configuration
 	if configSource == "file" {
 		log.Println("Reading configuration from config.yml")
 		parseConfigFromFile(config)
@@ -41,7 +45,8 @@ func main() {
 		panic(fmt.Sprintf("incorrect config source %s. Use 'file' or 'env'", configSource))
 	}
 
-	srv, err := server.NewServer(config)
+	// Creating server
+	srv, err := server.New(config, logger)
 
 	if err != nil {
 		log.Fatal(err)
@@ -72,6 +77,7 @@ func parseConfigFromEnvironment(config *server.Config) {
 	config.Database.DbHost = os.Getenv("DB_HOST")
 	config.Database.DbUser = os.Getenv("DB_USER")
 	config.Database.DbName = os.Getenv("DB_NAME")
+
 	config.Database.DbPassword = os.Getenv("DB_PASSWORD")
 	config.Database.DbPort, _ = strconv.Atoi(os.Getenv("DB_PORT"))
 

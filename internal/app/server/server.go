@@ -1,6 +1,7 @@
 package server
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -10,16 +11,18 @@ import (
 	"github.com/timickb/url-shortener/internal/app/store"
 )
 
-type Server struct {
+type APIServer struct {
 	config           *Config
 	router           *mux.Router
 	store            store.Store
+	logger           *logrus.Logger
 	connectionString string
 }
 
-func NewServer(config *Config) (*Server, error) {
-	srv := &Server{
+func New(config *Config, logger *logrus.Logger) (*APIServer, error) {
+	srv := &APIServer{
 		config: config,
+		logger: logger,
 		router: mux.NewRouter(),
 	}
 
@@ -30,52 +33,62 @@ func NewServer(config *Config) (*Server, error) {
 		srv.config.Database.DbPassword,
 		srv.config.Database.DbName)
 
-	if err := srv.ConfigureStore(); err != nil {
+	if err := srv.configureStore(); err != nil {
 		return nil, err
 	}
 
-	srv.ConfigureRouter()
+	srv.configureRouter()
 
 	return srv, nil
 }
 
-func (server *Server) Start() error {
+func (s *APIServer) Start() error {
 
-	logrus.Info(fmt.Sprintf("Starting server on port %d", server.config.ServerPort))
+	s.logger.Info(fmt.Sprintf("Starting server on port %d", s.config.ServerPort))
 
 	defer func(store store.Store) {
 		_ = store.Close()
-	}(server.store)
+	}(s.store)
 
-	return http.ListenAndServe(":"+strconv.Itoa(server.config.ServerPort), server.router)
+	return http.ListenAndServe(":"+strconv.Itoa(s.config.ServerPort), s.router)
 }
 
-func (server *Server) ConfigureStore() error {
-	logrus.Info(fmt.Sprintf("Configuring store %s", server.config.StoreImpl))
+func (s *APIServer) Close() error {
+	return s.store.Close()
+}
 
-	st, stErr := store.NewStore(
-		server.connectionString,
-		server.config.StoreImpl,
-		server.config.MaxUrlLength)
+func (s *APIServer) configureStore() error {
+	s.logger.Info(fmt.Sprintf("Configuring store %s", s.config.StoreImpl))
 
-	if stErr != nil {
-		return stErr
+	db, err := sql.Open("postgres", s.connectionString)
+
+	if err != nil {
+		s.logger.Warnf("Couldn't open db connection: %s", err.Error())
+	} else {
+		s.logger.Info("DB connection set")
+	}
+
+	st, err := store.New(db, s.logger, s.config.StoreImpl, s.config.MaxUrlLength)
+
+	if err != nil {
+		return err
 	}
 
 	if err := st.Open(); err != nil {
 		return err
 	}
-	server.store = st
-	logrus.Info("Store configured")
+
+	s.store = st
+	s.logger.Info("Store configured")
 
 	return nil
 }
 
-func (server *Server) ConfigureRouter() {
-	server.router.HandleFunc("/create", server.handleCreate()).Methods("POST")
-	server.router.HandleFunc("/restore", server.handleRestore()).Methods("GET")
+func (s *APIServer) configureRouter() {
+	s.router.HandleFunc("/create", s.handleCreate()).Methods("POST")
+	s.router.HandleFunc("/restore", s.handleRestore()).Methods("GET")
 }
 
-func (server *Server) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	server.router.ServeHTTP(writer, request)
+func (s *APIServer) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
+	s.router.ServeHTTP(writer, request)
 }

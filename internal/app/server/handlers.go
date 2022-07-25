@@ -7,11 +7,11 @@ import (
 	"sync"
 )
 
-func (server *Server) error(wr http.ResponseWriter, status int, err error) {
+func (server *APIServer) error(wr http.ResponseWriter, status int, err error) {
 	server.makeResponse(wr, status, map[string]string{"error": err.Error()})
 }
 
-func (server *Server) makeResponse(wr http.ResponseWriter, status int, data interface{}) {
+func (server *APIServer) makeResponse(wr http.ResponseWriter, status int, data interface{}) {
 	wr.WriteHeader(status)
 
 	if data != nil {
@@ -19,7 +19,7 @@ func (server *Server) makeResponse(wr http.ResponseWriter, status int, data inte
 	}
 }
 
-func (server *Server) handleCreate() http.HandlerFunc {
+func (server *APIServer) handleCreate() http.HandlerFunc {
 	type createRequest struct {
 		Url string `json:"url"`
 	}
@@ -56,7 +56,7 @@ func (server *Server) handleCreate() http.HandlerFunc {
 	}
 }
 
-func (server *Server) handleRestore() http.HandlerFunc {
+func (server *APIServer) handleRestore() http.HandlerFunc {
 	type restoreResponse struct {
 		Original string `json:"original"`
 	}

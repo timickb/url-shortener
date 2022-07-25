@@ -3,11 +3,13 @@ package server
 import (
 	"errors"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestDefaultConfig(t *testing.T) {
@@ -22,7 +24,7 @@ func TestServerGeneralResponse(t *testing.T) {
 	rec := httptest.NewRecorder()
 	http.NewRequest(http.MethodGet, "/some-strange-endpoint", nil)
 
-	s, err := NewServer(&Config{ServerPort: 8080, StoreImpl: "test"})
+	s, err := New(&Config{ServerPort: 8080, StoreImpl: "test"}, logrus.New())
 	if err != nil {
 		t.Fatalf("an error occured while creating server instance")
 	}
@@ -35,7 +37,7 @@ func TestServerErrorResponse(t *testing.T) {
 	rec := httptest.NewRecorder()
 	http.NewRequest(http.MethodGet, "/some-strange-endpoint", nil)
 
-	s, err := NewServer(&Config{ServerPort: 8080, StoreImpl: "test"})
+	s, err := New(&Config{ServerPort: 8080, StoreImpl: "test"}, logrus.New())
 	if err != nil {
 		t.Fatalf("an error occured while creating server instance")
 	}
@@ -54,7 +56,7 @@ func TestServerRestoreEndpoint(t *testing.T) {
 		t.Fail()
 	}
 
-	s, err := NewServer(&Config{ServerPort: 8080, StoreImpl: "test"})
+	s, err := New(&Config{ServerPort: 8080, StoreImpl: "test"}, logrus.New())
 	if err != nil {
 		t.Fatalf("an error occured while creating server instance")
 	}
@@ -74,7 +76,7 @@ func TestServerCreateEndpoint(t *testing.T) {
 		t.Fail()
 	}
 
-	s, err := NewServer(&Config{ServerPort: 8080, StoreImpl: "test"})
+	s, err := New(&Config{ServerPort: 8080, StoreImpl: "test"}, logrus.New())
 	if err != nil {
 		t.Fatalf("an error occured while creating server instance")
 	}
@@ -94,7 +96,7 @@ func TestServerCreateEndpointInvalidJSON(t *testing.T) {
 		t.Fail()
 	}
 
-	s, err := NewServer(&Config{ServerPort: 8080, StoreImpl: "test"})
+	s, err := New(&Config{ServerPort: 8080, StoreImpl: "test"}, logrus.New())
 	if err != nil {
 		t.Fatalf("an error occured while creating server instance")
 	}
@@ -114,7 +116,7 @@ func TestServerCreateEmptyURL(t *testing.T) {
 		t.Fail()
 	}
 
-	s, err := NewServer(&Config{ServerPort: 8080, StoreImpl: "test"})
+	s, err := New(&Config{ServerPort: 8080, StoreImpl: "test"}, logrus.New())
 	if err != nil {
 		t.Fatalf("an error occured while creating server instance")
 	}
