@@ -6,32 +6,22 @@ import (
 	"fmt"
 
 	_ "github.com/lib/pq"
-	"github.com/sirupsen/logrus"
 	"github.com/timickb/url-shortener/internal/app/algorithm"
 )
 
 type DbStore struct {
-	maxUrlLength     int
-	connectionString string
-	db               *sql.DB
+	maxUrlLength int
+	db           *sql.DB
 }
 
-func (store *DbStore) Open() error {
-	if store.db == nil {
-		db, err := sql.Open("postgres", store.connectionString)
-
-		if err != nil {
-			return err
-		}
-
-		if err := db.Ping(); err != nil {
-			return err
-		}
-
-		store.db = db
+func (s *DbStore) Open() error {
+	if s.db == nil {
+		return errors.New("database is nil")
 	}
 
-	logrus.Info("Database connection set")
+	if err := s.db.Ping(); err != nil {
+		return err
+	}
 	return nil
 }
 

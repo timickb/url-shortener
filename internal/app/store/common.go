@@ -3,7 +3,8 @@ package store
 import (
 	"database/sql"
 	"errors"
-	"fmt"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Store interface {
@@ -17,7 +18,7 @@ type Store interface {
 	RestoreLink(string) (string, error)
 }
 
-func NewStore(connectionString string, storeImpl string, maxUrlLength int) (Store, error) {
+func New(db *sql.DB, logger *logrus.Logger, storeImpl string, maxUrlLength int) (Store, error) {
 	switch storeImpl {
 
 	case "local":
@@ -25,17 +26,14 @@ func NewStore(connectionString string, storeImpl string, maxUrlLength int) (Stor
 
 	case "db":
 		return &DbStore{
-			connectionString: connectionString,
-			maxUrlLength:     maxUrlLength}, nil
+			db:           db,
+			maxUrlLength: maxUrlLength}, nil
 
 	case "improved":
-		db, err := sql.Open("postgres", connectionString)
-		if err != nil {
-			fmt.Println("couldn't create database connection")
-		}
 		return &ImprovedStore{
 			db:           db,
 			maxUrlLength: 300,
+			logger:       logger,
 		}, nil
 
 	case "test":
