@@ -14,5 +14,6 @@ test_report:
 	go tool cover -html=coverage_server.out
 	go tool cover -html=coverage_store.out
 	go tool cover -html=coverage_algorithm.out
+	rm *.out
 
 .DEFAULT_GOAL := build
