@@ -5,14 +5,15 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/timickb/url-shortener/internal/app/algorithm"
 )
 
 func TestNewStore(t *testing.T) {
-	st1, err1 := New(nil, nil, "local", 300)
-	st2, err2 := New(nil, nil, "db", 300)
-	st3, err3 := New(nil, nil, "test", 300)
+	st1, err1 := New(nil, logrus.StandardLogger(), "local", 300)
+	st2, err2 := New(nil, logrus.StandardLogger(), "db", 300)
+	st3, err3 := New(nil, logrus.StandardLogger(), "test", 300)
 
 	if err1 != nil || err2 != nil || err3 != nil {
 		t.Fatalf("error occured while creating store instances")
@@ -24,7 +25,7 @@ func TestNewStore(t *testing.T) {
 }
 
 func TestLocalStore_RestoreLink(t *testing.T) {
-	st, err := New(nil, nil, "local", 300)
+	st, err := NewLocal(logrus.StandardLogger())
 
 	if err != nil {
 		t.Fatalf("error occurred while creating local store instance")
@@ -42,7 +43,7 @@ func TestLocalStore_RestoreLink(t *testing.T) {
 }
 
 func TestLocalStore_CreateLink(t *testing.T) {
-	st, err := New(nil, nil, "local", 300)
+	st, err := NewLocal(logrus.StandardLogger())
 
 	if err != nil {
 		t.Fatalf("error occurred while creating local store instance")
@@ -66,7 +67,7 @@ func TestDbStore_RestoreLink_DoesntExist(t *testing.T) {
 	}
 	defer db.Close()
 
-	s := NewDBStore(db)
+	s, _ := NewDB(logrus.StandardLogger(), db)
 
 	mock.ExpectQuery("SELECT original FROM recordings")
 
@@ -87,7 +88,7 @@ func TestDbStore_CreateLink(t *testing.T) {
 	}
 	defer db.Close()
 
-	s := NewDBStore(db)
+	s, _ := NewDB(logrus.StandardLogger(), db)
 
 	hash := algorithm.ComputeShortening("test-link")
 

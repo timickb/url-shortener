@@ -1,21 +1,22 @@
 package store
 
 import (
-	"errors"
 	"fmt"
 
 	_ "github.com/lib/pq"
+	"github.com/sirupsen/logrus"
 	"github.com/timickb/url-shortener/internal/app/algorithm"
 )
 
 type LocalStore struct {
-	maxUrlLength int
-	// key -> shortened url, value -> original url
+	logger        *logrus.Logger
+	maxUrlLength  int
 	memoryStorage map[string]string
 }
 
-func (store *LocalStore) Open() error {
-	store.memoryStorage = make(map[string]string)
+func (s *LocalStore) Open() error {
+	s.memoryStorage = make(map[string]string)
+	s.logger.Info("In-memory storage initialized")
 	return nil
 }
 
@@ -53,5 +54,5 @@ func (store *LocalStore) RestoreLink(hash string) (string, error) {
 		return value, nil
 	}
 
-	return "", errors.New(fmt.Sprintf("shortening %s doesn't exist", hash))
+	return "", fmt.Errorf("shortening %s doesn't exist", hash)
 }

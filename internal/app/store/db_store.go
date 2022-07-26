@@ -6,12 +6,14 @@ import (
 	"fmt"
 
 	_ "github.com/lib/pq"
+	"github.com/sirupsen/logrus"
 	"github.com/timickb/url-shortener/internal/app/algorithm"
 )
 
 type DbStore struct {
 	maxUrlLength int
 	db           *sql.DB
+	logger       *logrus.Logger
 }
 
 func (s *DbStore) Open() error {
@@ -36,7 +38,7 @@ func (store *DbStore) Close() error {
 
 func (store *DbStore) CreateLink(url string) (string, error) {
 	if len(url) > store.maxUrlLength {
-		return "", errors.New(fmt.Sprintf("maximum URL length is %d", store.maxUrlLength))
+		return "", fmt.Errorf("maximum URL length is %d", store.maxUrlLength)
 	}
 
 	hash := algorithm.ComputeShortening(url)
@@ -57,7 +59,7 @@ func (store *DbStore) RestoreLink(hash string) (string, error) {
 	err := store.db.QueryRow("SELECT original FROM recordings WHERE shortened = $1", hash).Scan(&original)
 
 	if err != nil {
-		return "", errors.New(fmt.Sprintf("shortening %s doesn't exist", hash))
+		return "", fmt.Errorf("shortening %s doesn't exist", hash)
 	}
 
 	return original, nil

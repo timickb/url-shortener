@@ -18,42 +18,45 @@ type Store interface {
 	RestoreLink(string) (string, error)
 }
 
+func NewLocal(logger *logrus.Logger) (*LocalStore, error) {
+	return &LocalStore{
+		logger:       logger,
+		maxUrlLength: 500,
+	}, nil
+}
+
+func NewDB(logger *logrus.Logger, db *sql.DB) (*DbStore, error) {
+	return &DbStore{
+		logger:       logger,
+		db:           db,
+		maxUrlLength: 500,
+	}, nil
+}
+
+func NewImproved(logger *logrus.Logger, db *sql.DB) (*ImprovedStore, error) {
+	return &ImprovedStore{
+		logger:       logger,
+		db:           db,
+		maxUrlLength: 500,
+	}, nil
+}
+
 func New(db *sql.DB, logger *logrus.Logger, storeImpl string, maxUrlLength int) (Store, error) {
 	switch storeImpl {
 
 	case "local":
-		return &LocalStore{maxUrlLength: maxUrlLength}, nil
+		return NewLocal(logger)
 
 	case "db":
-		return &DbStore{
-			db:           db,
-			maxUrlLength: maxUrlLength}, nil
+		return NewDB(logger, db)
 
 	case "improved":
-		return &ImprovedStore{
-			db:           db,
-			maxUrlLength: 300,
-			logger:       logger,
-		}, nil
+		return NewImproved(logger, db)
 
 	case "test":
 		return &MockStore{}, nil
 
 	default:
 		return nil, errors.New("store: incorrect impl parameter")
-	}
-}
-
-func NewDBStore(db *sql.DB) *DbStore {
-	return &DbStore{
-		db:           db,
-		maxUrlLength: 300,
-	}
-}
-
-func NewImprovedStore(db *sql.DB) *ImprovedStore {
-	return &ImprovedStore{
-		db:           db,
-		maxUrlLength: 300,
 	}
 }
