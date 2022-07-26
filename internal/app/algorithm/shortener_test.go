@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestComputeShortening_functionality(t *testing.T) {
+func TestComputeShorteningFunctionality(t *testing.T) {
 	t.Helper()
 
 	hash := ComputeShortening("https://minecraft.net")
@@ -16,7 +16,7 @@ func TestComputeShortening_functionality(t *testing.T) {
 	}
 }
 
-func TestComputeShortening_bijection(t *testing.T) {
+func TestComputeShorteningBijection(t *testing.T) {
 	t.Helper()
 
 	storage := make(map[string]string)

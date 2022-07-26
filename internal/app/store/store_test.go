@@ -24,7 +24,7 @@ func TestNewStore(t *testing.T) {
 	assert.Equal(t, reflect.TypeOf(&StubStore{}), reflect.TypeOf(st3))
 }
 
-func TestLocalStore_RestoreLink(t *testing.T) {
+func TestLocalStoreRestoreLink(t *testing.T) {
 	st, err := NewLocal(logrus.StandardLogger())
 
 	if err != nil {
@@ -42,7 +42,7 @@ func TestLocalStore_RestoreLink(t *testing.T) {
 
 }
 
-func TestLocalStore_CreateLink(t *testing.T) {
+func TestLocalStoreCreateLink(t *testing.T) {
 	st, err := NewLocal(logrus.StandardLogger())
 
 	if err != nil {
@@ -59,7 +59,7 @@ func TestLocalStore_CreateLink(t *testing.T) {
 
 }
 
-func TestDbStore_RestoreLink_DoesntExist(t *testing.T) {
+func TestDbStoreRestoreLinkDoesntExist(t *testing.T) {
 	db, mock, err := sqlmock.New()
 
 	if err != nil {
@@ -80,7 +80,7 @@ func TestDbStore_RestoreLink_DoesntExist(t *testing.T) {
 	}
 }
 
-func TestDbStore_CreateLink(t *testing.T) {
+func TestDbStoreCreateLink(t *testing.T) {
 	db, mock, err := sqlmock.New()
 
 	if err != nil {
