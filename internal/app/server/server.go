@@ -68,7 +68,7 @@ func (s *APIServer) configureStore() error {
 		s.logger.Info("DB connection set")
 	}
 
-	st, err := store.New(db, s.logger, s.config.StoreImpl, s.config.MaxUrlLength)
+	st, err := store.New(db, s.logger, s.config.StoreImpl)
 
 	if err != nil {
 		return err

@@ -11,9 +11,9 @@ import (
 )
 
 func TestNewStore(t *testing.T) {
-	st1, err1 := New(nil, logrus.StandardLogger(), "local", 300)
-	st2, err2 := New(nil, logrus.StandardLogger(), "db", 300)
-	st3, err3 := New(nil, logrus.StandardLogger(), "test", 300)
+	st1, err1 := New(nil, logrus.StandardLogger(), "local")
+	st2, err2 := New(nil, logrus.StandardLogger(), "db")
+	st3, err3 := New(nil, logrus.StandardLogger(), "test")
 
 	if err1 != nil || err2 != nil || err3 != nil {
 		t.Fatalf("error occured while creating store instances")
@@ -63,7 +63,7 @@ func TestDbStoreRestoreLinkDoesntExist(t *testing.T) {
 	db, mock, err := sqlmock.New()
 
 	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		t.Fatalf("an error '%s' was not expected when opening a mock database connection", err)
 	}
 	defer db.Close()
 
@@ -84,7 +84,7 @@ func TestDbStoreCreateLink(t *testing.T) {
 	db, mock, err := sqlmock.New()
 
 	if err != nil {
-		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+		t.Fatalf("an error '%s' was not expected when opening a mock database connection", err)
 	}
 	defer db.Close()
 
@@ -96,11 +96,90 @@ func TestDbStoreCreateLink(t *testing.T) {
 		WithArgs("test-link", hash).WillReturnResult(sqlmock.NewResult(1, 1))
 
 	if _, err = s.CreateLink("test-link"); err != nil {
-		t.Errorf("error was not expected while creating link: %s", err)
+		t.Errorf("error was not expected when call CreateLink: %s", err)
+	}
+
+	if err = mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestImprovedStoreCreateLinkFirstTime(t *testing.T) {
+	// create mock database
+	db, mock, err := sqlmock.New()
+
+	if err != nil {
+		t.Fatalf("error %s was not expected when opening a mock database connection", err)
+	}
+	defer db.Close()
+
+	// create ImprovedStore instance
+	s, _ := NewImproved(logrus.StandardLogger(), db)
+
+	url := "test-url"
+	hash := algorithm.ComputeShortening(url)
+
+	// expecting insert query
+	mock.ExpectExec("INSERT INTO recordings").
+		WithArgs(url, hash).WillReturnResult(sqlmock.NewResult(1, 1))
+
+	// opening store
+	err = s.Open()
+	if err != nil {
+		t.Errorf("error was not expected when call Open: %s", err)
+	}
+	defer s.Close()
+
+	// testing CreateLink method
+	if _, err := s.CreateLink(url); err != nil {
+		t.Errorf("error was not expected when call CreateLink: %s", err)
 	}
 
 	if err = mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)
 	}
 
+	// check whether the url added to in-memory
+	_, ok := s.memoryStorage[hash]
+	assert.Equal(t, true, ok)
+}
+
+func TestImprovedStoreCreateLinkSecondTime(t *testing.T) {
+	// create mock database
+	db, mock, err := sqlmock.New()
+
+	if err != nil {
+		t.Fatalf("error %s was not expected when opening a mock database connection", err)
+	}
+	defer db.Close()
+
+	// create ImprovedStore instance
+	s, _ := NewImproved(logrus.StandardLogger(), db)
+
+	url := "test-url"
+	hash := algorithm.ComputeShortening(url)
+
+	// NOT expecting insert query
+	mock.ExpectExec("INSERT INTO recordings").
+		WithArgs(url, hash).WillReturnResult(sqlmock.NewResult(1, 1))
+
+	// opening store
+	err = s.Open()
+	if err != nil {
+		t.Errorf("error was not expected when call Open: %s", err)
+	}
+	defer s.Close()
+
+	// manually add existing url
+	s.memoryStorage[hash] = url
+
+	// testing CreateLink method
+	if _, err := s.CreateLink(url); err != nil {
+		t.Errorf("error was not expected when call CreateLink: %s", err)
+	}
+
+	// we don't want the query executed
+	if err = mock.ExpectationsWereMet(); err == nil {
+		t.Errorf("there were fulfilled expectations: %s", err)
+	}
 }

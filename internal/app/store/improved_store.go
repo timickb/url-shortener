@@ -11,7 +11,6 @@ import (
 )
 
 type ImprovedStore struct {
-	maxUrlLength  int
 	memoryStorage map[string]string
 	db            *sql.DB
 	logger        *logrus.Logger
@@ -43,9 +42,6 @@ func (s *ImprovedStore) Close() error {
 }
 
 func (s *ImprovedStore) CreateLink(url string) (string, error) {
-	if len(url) > s.maxUrlLength {
-		return "", fmt.Errorf("maximum URL length is %d", s.maxUrlLength)
-	}
 	hash := algorithm.ComputeShortening(url)
 
 	_, ok := s.memoryStorage[hash]
@@ -86,6 +82,8 @@ func (s *ImprovedStore) RestoreLink(hash string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("shortening %s doesn't exist", hash)
 	}
+
+	s.memoryStorage[hash] = original
 
 	return original, nil
 }

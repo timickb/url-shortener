@@ -10,7 +10,6 @@ import (
 
 type LocalStore struct {
 	logger        *logrus.Logger
-	maxUrlLength  int
 	memoryStorage map[string]string
 }
 
@@ -25,10 +24,6 @@ func (store *LocalStore) Close() error {
 }
 
 func (store *LocalStore) CreateLink(url string) (string, error) {
-	if len(url) > store.maxUrlLength {
-		return "", fmt.Errorf("maximum URL length is %d", store.maxUrlLength)
-	}
-
 	hash := algorithm.ComputeShortening(url)
 
 	value, ok := store.memoryStorage[hash]

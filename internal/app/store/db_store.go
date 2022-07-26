@@ -11,9 +11,8 @@ import (
 )
 
 type DbStore struct {
-	maxUrlLength int
-	db           *sql.DB
-	logger       *logrus.Logger
+	db     *sql.DB
+	logger *logrus.Logger
 }
 
 func (s *DbStore) Open() error {
@@ -37,10 +36,6 @@ func (store *DbStore) Close() error {
 }
 
 func (store *DbStore) CreateLink(url string) (string, error) {
-	if len(url) > store.maxUrlLength {
-		return "", fmt.Errorf("maximum URL length is %d", store.maxUrlLength)
-	}
-
 	hash := algorithm.ComputeShortening(url)
 
 	_, err := store.db.Exec("INSERT INTO recordings (original, shortened) VALUES($1, $2) ON CONFLICT DO NOTHING",

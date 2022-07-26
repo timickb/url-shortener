@@ -82,7 +82,9 @@ func TestServerCreateEndpoint(t *testing.T) {
 	}
 	s.ServeHTTP(rec, req)
 
-	assert.Equal(t, rec.Code, http.StatusOK)
+	fmt.Println(rec.Body)
+
+	assert.Equal(t, http.StatusOK, rec.Code)
 }
 
 func TestServerCreateEndpointInvalidJSON(t *testing.T) {

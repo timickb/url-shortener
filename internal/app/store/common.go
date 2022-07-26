@@ -20,28 +20,25 @@ type Store interface {
 
 func NewLocal(logger *logrus.Logger) (*LocalStore, error) {
 	return &LocalStore{
-		logger:       logger,
-		maxUrlLength: 500,
+		logger: logger,
 	}, nil
 }
 
 func NewDB(logger *logrus.Logger, db *sql.DB) (*DbStore, error) {
 	return &DbStore{
-		logger:       logger,
-		db:           db,
-		maxUrlLength: 500,
+		logger: logger,
+		db:     db,
 	}, nil
 }
 
 func NewImproved(logger *logrus.Logger, db *sql.DB) (*ImprovedStore, error) {
 	return &ImprovedStore{
-		logger:       logger,
-		db:           db,
-		maxUrlLength: 500,
+		logger: logger,
+		db:     db,
 	}, nil
 }
 
-func New(db *sql.DB, logger *logrus.Logger, storeImpl string, maxUrlLength int) (Store, error) {
+func New(db *sql.DB, logger *logrus.Logger, storeImpl string) (Store, error) {
 	switch storeImpl {
 
 	case "local":
