@@ -21,7 +21,7 @@ func TestNewStore(t *testing.T) {
 
 	assert.Equal(t, reflect.TypeOf(&LocalStore{}), reflect.TypeOf(st1))
 	assert.Equal(t, reflect.TypeOf(&DbStore{}), reflect.TypeOf(st2))
-	assert.Equal(t, reflect.TypeOf(&MockStore{}), reflect.TypeOf(st3))
+	assert.Equal(t, reflect.TypeOf(&StubStore{}), reflect.TypeOf(st3))
 }
 
 func TestLocalStore_RestoreLink(t *testing.T) {

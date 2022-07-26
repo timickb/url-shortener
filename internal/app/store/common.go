@@ -54,7 +54,7 @@ func New(db *sql.DB, logger *logrus.Logger, storeImpl string, maxUrlLength int) 
 		return NewImproved(logger, db)
 
 	case "test":
-		return &MockStore{}, nil
+		return &StubStore{}, nil
 
 	default:
 		return nil, errors.New("store: incorrect impl parameter")
