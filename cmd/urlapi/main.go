@@ -28,6 +28,12 @@ func init() {
 func main() {
 	logger := logrus.New()
 
+	if err := mainNoExit(logger); err != nil {
+		log.Fatalf("fatal err: %s", err.Error())
+	}
+}
+
+func mainNoExit(logger *logrus.Logger) error {
 	flag.Parse()
 
 	config := server.DefaultConfig()
@@ -36,25 +42,27 @@ func main() {
 
 	// Parsing configuration
 	if configSource == "file" {
-		log.Println("Reading configuration from config.yml")
+		logger.Info("Reading configuration from file")
 		parseConfigFromFile(config)
 	} else if configSource == "env" {
-		log.Println("Reading configuration from environment")
+		logger.Info("Reading configuration from environment")
 		parseConfigFromEnvironment(config)
 	} else {
-		panic(fmt.Sprintf("incorrect config source %s. Use 'file' or 'env'", configSource))
+		return fmt.Errorf("incorrect config source %s. Use 'file' or 'env'", configSource)
 	}
 
 	// Creating server
 	srv, err := server.New(config, logger)
 
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	if err := srv.Start(); err != nil {
-		log.Fatal(err)
+		return err
 	}
+
+	return nil
 }
 
 func parseConfigFromFile(config *server.Config) {
