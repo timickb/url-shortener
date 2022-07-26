@@ -2,8 +2,9 @@ package algorithm
 
 import (
 	"crypto/md5"
-	"github.com/speps/go-hashids/v2"
 	"strconv"
+
+	"github.com/speps/go-hashids/v2"
 )
 
 const (
@@ -15,12 +16,20 @@ const (
 	hashSize = 10
 )
 
-func ComputeShortening(str string) string {
+type Shortener interface {
+	ComputeShortening(url string) string
+}
+
+type DefaultShortener struct {
+	HashSize int
+}
+
+func (s DefaultShortener) ComputeShortening(url string) string {
 	var salt int
-	for i := 0; i < len(str); i++ {
-		salt += int(str[i])
+	for i := 0; i < len(url); i++ {
+		salt += int(url[i])
 	}
-	md5hash := md5.Sum([]byte(str))
+	md5hash := md5.Sum([]byte(url))
 
 	md5sumInt := make([]int, len(md5hash))
 	for i := 0; i < len(md5hash); i++ {
@@ -34,5 +43,5 @@ func ComputeShortening(str string) string {
 	h, _ := hashids.NewWithData(hd)
 	encoded, _ := h.Encode(md5sumInt)
 
-	return encoded[:hashSize]
+	return encoded[:s.HashSize]
 }

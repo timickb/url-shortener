@@ -11,9 +11,9 @@ import (
 )
 
 func TestNewStore(t *testing.T) {
-	st1, err1 := New(nil, logrus.StandardLogger(), "local")
-	st2, err2 := New(nil, logrus.StandardLogger(), "db")
-	st3, err3 := New(nil, logrus.StandardLogger(), "test")
+	st1, err1 := New(nil, nil, logrus.StandardLogger(), "local")
+	st2, err2 := New(nil, nil, logrus.StandardLogger(), "db")
+	st3, err3 := New(nil, nil, logrus.StandardLogger(), "test")
 
 	if err1 != nil || err2 != nil || err3 != nil {
 		t.Fatalf("error occured while creating store instances")
@@ -25,7 +25,8 @@ func TestNewStore(t *testing.T) {
 }
 
 func TestLocalStoreRestoreLink(t *testing.T) {
-	st, err := NewLocal(logrus.StandardLogger())
+	shr := algorithm.StubShortener{}
+	st, err := NewLocal(&shr, logrus.StandardLogger())
 
 	if err != nil {
 		t.Fatalf("error occurred while creating local store instance")
@@ -33,7 +34,7 @@ func TestLocalStoreRestoreLink(t *testing.T) {
 
 	st.Open()
 	link := "https://abc.xyz"
-	hash := algorithm.ComputeShortening(link)
+	hash := shr.ComputeShortening(link)
 
 	_, _ = st.CreateLink(link)
 	result, _ := st.RestoreLink(hash)
@@ -43,7 +44,8 @@ func TestLocalStoreRestoreLink(t *testing.T) {
 }
 
 func TestLocalStoreCreateLink(t *testing.T) {
-	st, err := NewLocal(logrus.StandardLogger())
+	shr := algorithm.StubShortener{}
+	st, err := NewLocal(&shr, logrus.StandardLogger())
 
 	if err != nil {
 		t.Fatalf("error occurred while creating local store instance")
@@ -51,7 +53,7 @@ func TestLocalStoreCreateLink(t *testing.T) {
 
 	st.Open()
 	link := "https://abc.xyz"
-	hash := algorithm.ComputeShortening(link)
+	hash := shr.ComputeShortening(link)
 
 	result, _ := st.CreateLink(link)
 
@@ -67,7 +69,7 @@ func TestDbStoreRestoreLinkDoesntExist(t *testing.T) {
 	}
 	defer db.Close()
 
-	s, _ := NewDB(logrus.StandardLogger(), db)
+	s, _ := NewDB(algorithm.DefaultShortener{HashSize: 10}, logrus.StandardLogger(), db)
 
 	mock.ExpectQuery("SELECT original FROM recordings")
 
@@ -88,9 +90,11 @@ func TestDbStoreCreateLink(t *testing.T) {
 	}
 	defer db.Close()
 
-	s, _ := NewDB(logrus.StandardLogger(), db)
+	shr := algorithm.DefaultShortener{HashSize: 10}
 
-	hash := algorithm.ComputeShortening("test-link")
+	s, _ := NewDB(shr, logrus.StandardLogger(), db)
+
+	hash := shr.ComputeShortening("test-link")
 
 	mock.ExpectExec("INSERT INTO recordings").
 		WithArgs("test-link", hash).WillReturnResult(sqlmock.NewResult(1, 1))
@@ -113,11 +117,13 @@ func TestImprovedStoreCreateLinkFirstTime(t *testing.T) {
 	}
 	defer db.Close()
 
+	shr := algorithm.DefaultShortener{HashSize: 10}
+
 	// create ImprovedStore instance
-	s, _ := NewImproved(logrus.StandardLogger(), db)
+	s, _ := NewImproved(shr, logrus.StandardLogger(), db)
 
 	url := "test-url"
-	hash := algorithm.ComputeShortening(url)
+	hash := shr.ComputeShortening(url)
 
 	// expecting insert query
 	mock.ExpectExec("INSERT INTO recordings").
@@ -153,11 +159,13 @@ func TestImprovedStoreCreateLinkSecondTime(t *testing.T) {
 	}
 	defer db.Close()
 
+	shr := algorithm.DefaultShortener{HashSize: 10}
+
 	// create ImprovedStore instance
-	s, _ := NewImproved(logrus.StandardLogger(), db)
+	s, _ := NewImproved(shr, logrus.StandardLogger(), db)
 
 	url := "test-url"
-	hash := algorithm.ComputeShortening(url)
+	hash := shr.ComputeShortening(url)
 
 	// NOT expecting insert query
 	mock.ExpectExec("INSERT INTO recordings").

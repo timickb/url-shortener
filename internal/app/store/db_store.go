@@ -13,6 +13,7 @@ import (
 type DbStore struct {
 	db     *sql.DB
 	logger *logrus.Logger
+	shr    algorithm.Shortener
 }
 
 func (s *DbStore) Open() error {
@@ -35,10 +36,10 @@ func (store *DbStore) Close() error {
 	return nil
 }
 
-func (store *DbStore) CreateLink(url string) (string, error) {
-	hash := algorithm.ComputeShortening(url)
+func (s *DbStore) CreateLink(url string) (string, error) {
+	hash := s.shr.ComputeShortening(url)
 
-	_, err := store.db.Exec("INSERT INTO recordings (original, shortened) VALUES($1, $2) ON CONFLICT DO NOTHING",
+	_, err := s.db.Exec("INSERT INTO recordings (original, shortened) VALUES($1, $2) ON CONFLICT DO NOTHING",
 		url, hash)
 
 	if err != nil {

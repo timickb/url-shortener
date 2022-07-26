@@ -14,6 +14,7 @@ type ImprovedStore struct {
 	memoryStorage map[string]string
 	db            *sql.DB
 	logger        *logrus.Logger
+	shr           algorithm.Shortener
 }
 
 func (s *ImprovedStore) Open() error {
@@ -42,7 +43,7 @@ func (s *ImprovedStore) Close() error {
 }
 
 func (s *ImprovedStore) CreateLink(url string) (string, error) {
-	hash := algorithm.ComputeShortening(url)
+	hash := s.shr.ComputeShortening(url)
 
 	_, ok := s.memoryStorage[hash]
 
@@ -83,6 +84,7 @@ func (s *ImprovedStore) RestoreLink(hash string) (string, error) {
 		return "", fmt.Errorf("shortening %s doesn't exist", hash)
 	}
 
+	// and cash
 	s.memoryStorage[hash] = original
 
 	return original, nil

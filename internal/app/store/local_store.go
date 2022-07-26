@@ -11,6 +11,7 @@ import (
 type LocalStore struct {
 	logger        *logrus.Logger
 	memoryStorage map[string]string
+	shr           algorithm.Shortener
 }
 
 func (s *LocalStore) Open() error {
@@ -23,10 +24,10 @@ func (store *LocalStore) Close() error {
 	return nil
 }
 
-func (store *LocalStore) CreateLink(url string) (string, error) {
-	hash := algorithm.ComputeShortening(url)
+func (s *LocalStore) CreateLink(url string) (string, error) {
+	hash := s.shr.ComputeShortening(url)
 
-	value, ok := store.memoryStorage[hash]
+	value, ok := s.memoryStorage[hash]
 
 	// If hash exists and its original is different -> collision
 	if ok && url != value {
@@ -36,7 +37,7 @@ func (store *LocalStore) CreateLink(url string) (string, error) {
 	// If hash exists and its original is same -> do nothing
 
 	if !ok {
-		store.memoryStorage[hash] = url
+		s.memoryStorage[hash] = url
 	}
 
 	return hash, nil

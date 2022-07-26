@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
+	"github.com/timickb/url-shortener/internal/app/algorithm"
 	"github.com/timickb/url-shortener/internal/app/store"
 )
 
@@ -61,6 +62,7 @@ func (s *APIServer) configureStore() error {
 	s.logger.Info(fmt.Sprintf("Configuring store %s", s.config.StoreImpl))
 
 	db, err := sql.Open("postgres", s.connectionString)
+	shr := algorithm.DefaultShortener{HashSize: 10}
 
 	if err != nil {
 		s.logger.Warnf("Couldn't open db connection: %s", err.Error())
@@ -68,7 +70,7 @@ func (s *APIServer) configureStore() error {
 		s.logger.Info("DB connection set")
 	}
 
-	st, err := store.New(db, s.logger, s.config.StoreImpl)
+	st, err := store.New(shr, db, s.logger, s.config.StoreImpl)
 
 	if err != nil {
 		return err

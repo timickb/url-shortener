@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/sirupsen/logrus"
+	"github.com/timickb/url-shortener/internal/app/algorithm"
 )
 
 type Store interface {
@@ -18,37 +19,40 @@ type Store interface {
 	RestoreLink(string) (string, error)
 }
 
-func NewLocal(logger *logrus.Logger) (*LocalStore, error) {
+func NewLocal(shr algorithm.Shortener, logger *logrus.Logger) (*LocalStore, error) {
 	return &LocalStore{
+		shr:    shr,
 		logger: logger,
 	}, nil
 }
 
-func NewDB(logger *logrus.Logger, db *sql.DB) (*DbStore, error) {
+func NewDB(shr algorithm.Shortener, logger *logrus.Logger, db *sql.DB) (*DbStore, error) {
 	return &DbStore{
+		shr:    shr,
 		logger: logger,
 		db:     db,
 	}, nil
 }
 
-func NewImproved(logger *logrus.Logger, db *sql.DB) (*ImprovedStore, error) {
+func NewImproved(shr algorithm.Shortener, logger *logrus.Logger, db *sql.DB) (*ImprovedStore, error) {
 	return &ImprovedStore{
+		shr:    shr,
 		logger: logger,
 		db:     db,
 	}, nil
 }
 
-func New(db *sql.DB, logger *logrus.Logger, storeImpl string) (Store, error) {
+func New(shr algorithm.Shortener, db *sql.DB, logger *logrus.Logger, storeImpl string) (Store, error) {
 	switch storeImpl {
 
 	case "local":
-		return NewLocal(logger)
+		return NewLocal(shr, logger)
 
 	case "db":
-		return NewDB(logger, db)
+		return NewDB(shr, logger, db)
 
 	case "improved":
-		return NewImproved(logger, db)
+		return NewImproved(shr, logger, db)
 
 	case "test":
 		return &StubStore{}, nil
