@@ -13,7 +13,6 @@ const (
 	numbers  = "0123456789"
 	special  = "_"
 	alphabet = lower + upper + numbers + special
-	hashSize = 10
 )
 
 type Shortener interface {
@@ -37,7 +36,7 @@ func (s DefaultShortener) ComputeShortening(url string) string {
 	}
 
 	hd := hashids.NewData()
-	hd.MinLength = hashSize
+	hd.MinLength = s.HashSize
 	hd.Alphabet = alphabet
 	hd.Salt = strconv.Itoa(salt)
 	h, _ := hashids.NewWithData(hd)
