@@ -1,5 +1,6 @@
 server_port: 80
 max_url_length: 300
+shortening_size: 10
 
 database:
   db_host: "localhost"

@@ -15,6 +15,7 @@ type ImprovedStore struct {
 	db            *sql.DB
 	logger        *logrus.Logger
 	shr           algorithm.Shortener
+	maxURLLen     int
 }
 
 func (s *ImprovedStore) Open() error {
@@ -27,8 +28,6 @@ func (s *ImprovedStore) Open() error {
 	if s.db != nil {
 		if err := s.db.PingContext(ctx); err != nil {
 			s.logger.Errorf("Couldn't ping database: %s\n", err)
-		} else {
-			s.logger.Info("Database connection established")
 		}
 	}
 
@@ -77,11 +76,17 @@ func (s *ImprovedStore) RestoreLink(hash string) (string, error) {
 	}
 
 	// if not found - request from database
+	retErr := fmt.Errorf("shortening %s doesn't exist", hash)
+
+	if s.db == nil {
+		return "", retErr
+	}
+
 	var original string
 	err := s.db.QueryRow("SELECT original FROM recordings WHERE shortened = $1", hash).Scan(&original)
 
 	if err != nil {
-		return "", fmt.Errorf("shortening %s doesn't exist", hash)
+		return "", retErr
 	}
 
 	// and cash

@@ -1,94 +1,77 @@
 package server
 
 import (
-	"database/sql"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
-	"github.com/timickb/url-shortener/internal/app/algorithm"
 	"github.com/timickb/url-shortener/internal/app/store"
 )
 
 type APIServer struct {
-	config           *Config
-	router           *mux.Router
-	store            store.Store
-	logger           *logrus.Logger
-	connectionString string
+	config *Config
+	router *mux.Router
+	logger *logrus.Logger
+	store  store.Store
 }
 
-func New(config *Config, logger *logrus.Logger) (*APIServer, error) {
-	srv := &APIServer{
-		config: config,
-		logger: logger,
-		router: mux.NewRouter(),
+func WithLogger(logger *logrus.Logger) func(*APIServer) {
+	return func(s *APIServer) {
+		s.logger = logger
+	}
+}
+
+func WithConfig(config *Config) func(*APIServer) {
+	return func(s *APIServer) {
+		s.config = config
+	}
+}
+
+func WithStore(store store.Store) func(*APIServer) {
+	return func(s *APIServer) {
+		s.store = store
+	}
+}
+
+func New(options ...func(s *APIServer)) *APIServer {
+	srv := &APIServer{}
+
+	for _, applyOpt := range options {
+		applyOpt(srv)
 	}
 
-	srv.connectionString = fmt.Sprintf("host=%s port=%d user=%s password=\"%s\" dbname=%s sslmode=disable",
-		srv.config.Database.DbHost,
-		srv.config.Database.DbPort,
-		srv.config.Database.DbUser,
-		srv.config.Database.DbPassword,
-		srv.config.Database.DbName)
-
-	if err := srv.configureStore(); err != nil {
-		return nil, err
+	if srv.logger == nil {
+		fmt.Println("Logger not specidied. Using default")
+		srv.logger = logrus.New()
 	}
 
-	srv.configureRouter()
+	if srv.store == nil {
+		fmt.Println("Store not specified. Using default")
+		srv.store = store.New()
+		srv.store.Open()
+	}
 
-	return srv, nil
+	if srv.config == nil {
+		fmt.Println("Config not specified. Using default")
+		srv.config = DefaultConfig()
+	}
+
+	srv.router = mux.NewRouter()
+	srv.router.HandleFunc("/create", srv.handleCreate()).Methods("POST")
+	srv.router.HandleFunc("/restore", srv.handleRestore()).Methods("GET")
+
+	return srv
 }
 
 func (s *APIServer) Start() error {
-
 	s.logger.Info(fmt.Sprintf("Starting server on port %d", s.config.ServerPort))
-
-	defer func(store store.Store) {
-		_ = store.Close()
-	}(s.store)
-
 	return http.ListenAndServe(":"+strconv.Itoa(s.config.ServerPort), s.router)
 }
 
 func (s *APIServer) Close() error {
 	return s.store.Close()
-}
-
-func (s *APIServer) configureStore() error {
-	s.logger.Info(fmt.Sprintf("Configuring store %s", s.config.StoreImpl))
-
-	db, err := sql.Open("postgres", s.connectionString)
-	shr := algorithm.DefaultShortener{HashSize: 10}
-
-	if err != nil {
-		s.logger.Warnf("Couldn't open db connection: %s", err.Error())
-	} else {
-		s.logger.Info("DB connection set")
-	}
-
-	st, err := store.New(shr, db, s.logger, s.config.StoreImpl)
-
-	if err != nil {
-		return err
-	}
-
-	if err := st.Open(); err != nil {
-		return err
-	}
-
-	s.store = st
-	s.logger.Info("Store configured")
-
-	return nil
-}
-
-func (s *APIServer) configureRouter() {
-	s.router.HandleFunc("/create", s.handleCreate()).Methods("POST")
-	s.router.HandleFunc("/restore", s.handleRestore()).Methods("GET")
 }
 
 func (s *APIServer) ServeHTTP(writer http.ResponseWriter, request *http.Request) {

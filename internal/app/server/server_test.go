@@ -8,8 +8,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/timickb/url-shortener/internal/app/store"
 )
 
 func TestDefaultConfig(t *testing.T) {
@@ -24,10 +24,7 @@ func TestServerGeneralResponse(t *testing.T) {
 	rec := httptest.NewRecorder()
 	http.NewRequest(http.MethodGet, "/some-strange-endpoint", nil)
 
-	s, err := New(&Config{ServerPort: 8080, StoreImpl: "test"}, logrus.New())
-	if err != nil {
-		t.Fatalf("an error occured while creating server instance")
-	}
+	s := New()
 
 	s.makeResponse(rec, 201, nil)
 	assert.Equal(t, rec.Code, http.StatusCreated)
@@ -37,10 +34,7 @@ func TestServerErrorResponse(t *testing.T) {
 	rec := httptest.NewRecorder()
 	http.NewRequest(http.MethodGet, "/some-strange-endpoint", nil)
 
-	s, err := New(&Config{ServerPort: 8080, StoreImpl: "test"}, logrus.New())
-	if err != nil {
-		t.Fatalf("an error occured while creating server instance")
-	}
+	s := New()
 
 	s.error(rec, 400, errors.New("bad request"))
 	assert.Equal(t, rec.Code, http.StatusBadRequest)
@@ -56,10 +50,7 @@ func TestServerRestoreEndpoint(t *testing.T) {
 		t.Fail()
 	}
 
-	s, err := New(&Config{ServerPort: 8080, StoreImpl: "test"}, logrus.New())
-	if err != nil {
-		t.Fatalf("an error occured while creating server instance")
-	}
+	s := New(WithStore(&store.StubStore{}))
 	s.ServeHTTP(rec, req)
 
 	assert.Equal(t, rec.Code, http.StatusOK)
@@ -76,10 +67,7 @@ func TestServerCreateEndpoint(t *testing.T) {
 		t.Fail()
 	}
 
-	s, err := New(&Config{ServerPort: 8080, StoreImpl: "test"}, logrus.New())
-	if err != nil {
-		t.Fatalf("an error occured while creating server instance")
-	}
+	s := New(WithStore(&store.StubStore{}))
 	s.ServeHTTP(rec, req)
 
 	fmt.Println(rec.Body)
@@ -98,10 +86,7 @@ func TestServerCreateEndpointInvalidJSON(t *testing.T) {
 		t.Fail()
 	}
 
-	s, err := New(&Config{ServerPort: 8080, StoreImpl: "test"}, logrus.New())
-	if err != nil {
-		t.Fatalf("an error occured while creating server instance")
-	}
+	s := New()
 	s.ServeHTTP(rec, req)
 
 	assert.NotEqual(t, rec.Code, http.StatusOK)
@@ -118,10 +103,7 @@ func TestServerCreateEmptyURL(t *testing.T) {
 		t.Fail()
 	}
 
-	s, err := New(&Config{ServerPort: 8080, StoreImpl: "test"}, logrus.New())
-	if err != nil {
-		t.Fatalf("an error occured while creating server instance")
-	}
+	s := New()
 	s.ServeHTTP(rec, req)
 
 	assert.Equal(t, rec.Code, http.StatusBadRequest)

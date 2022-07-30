@@ -9,16 +9,18 @@ type DbConfig struct {
 }
 
 type Config struct {
-	ServerPort   int      `yaml:"server_port"`
-	MaxUrlLength int      `yaml:"max_url_length"`
-	Database     DbConfig `yaml:"database"`
-	StoreImpl    string
+	ServerPort     int      `yaml:"server_port"`
+	MaxUrlLength   int      `yaml:"max_url_length"`
+	ShorteningSize int      `yaml:"shortening_size"`
+	Database       DbConfig `yaml:"database"`
+	StoreImpl      string
 }
 
 func DefaultConfig() *Config {
 	return &Config{
-		ServerPort:   8080,
-		StoreImpl:    "db",
-		MaxUrlLength: 300,
+		ServerPort:     8080,
+		StoreImpl:      "db",
+		MaxUrlLength:   300,
+		ShorteningSize: 10,
 	}
 }

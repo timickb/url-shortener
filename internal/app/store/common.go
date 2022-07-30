@@ -2,7 +2,6 @@ package store
 
 import (
 	"database/sql"
-	"errors"
 
 	"github.com/sirupsen/logrus"
 	"github.com/timickb/url-shortener/internal/app/algorithm"
@@ -19,45 +18,48 @@ type Store interface {
 	RestoreLink(string) (string, error)
 }
 
-func NewLocal(shr algorithm.Shortener, logger *logrus.Logger) (*LocalStore, error) {
-	return &LocalStore{
-		shr:    shr,
-		logger: logger,
-	}, nil
+func New(options ...func(store *ImprovedStore)) *ImprovedStore {
+	store := &ImprovedStore{}
+
+	for _, applyOpt := range options {
+		applyOpt(store)
+	}
+
+	if store.logger == nil {
+		store.logger = logrus.StandardLogger()
+	}
+
+	if store.shr == nil {
+		store.shr = algorithm.DefaultShortener{HashSize: 10}
+	}
+
+	if store.maxURLLen <= 0 {
+		store.maxURLLen = 500
+	}
+
+	return store
 }
 
-func NewDB(shr algorithm.Shortener, logger *logrus.Logger, db *sql.DB) (*DbStore, error) {
-	return &DbStore{
-		shr:    shr,
-		logger: logger,
-		db:     db,
-	}, nil
+func WithLogger(logger *logrus.Logger) func(*ImprovedStore) {
+	return func(store *ImprovedStore) {
+		store.logger = logger
+	}
 }
 
-func NewImproved(shr algorithm.Shortener, logger *logrus.Logger, db *sql.DB) (*ImprovedStore, error) {
-	return &ImprovedStore{
-		shr:    shr,
-		logger: logger,
-		db:     db,
-	}, nil
+func WithDB(db *sql.DB) func(*ImprovedStore) {
+	return func(store *ImprovedStore) {
+		store.db = db
+	}
 }
 
-func New(shr algorithm.Shortener, db *sql.DB, logger *logrus.Logger, storeImpl string) (Store, error) {
-	switch storeImpl {
+func WithShortener(shr algorithm.Shortener) func(*ImprovedStore) {
+	return func(store *ImprovedStore) {
+		store.shr = shr
+	}
+}
 
-	case "local":
-		return NewLocal(shr, logger)
-
-	case "db":
-		return NewDB(shr, logger, db)
-
-	case "improved":
-		return NewImproved(shr, logger, db)
-
-	case "test":
-		return &StubStore{}, nil
-
-	default:
-		return nil, errors.New("store: incorrect impl parameter")
+func WithMaxURLLen(maxLen int) func(*ImprovedStore) {
+	return func(store *ImprovedStore) {
+		store.maxURLLen = maxLen
 	}
 }
