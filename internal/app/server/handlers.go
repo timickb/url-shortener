@@ -4,10 +4,23 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 	"sync"
 )
 
 func (s *APIServer) validateURL(url string) bool {
+	// no spaces allowed
+	parts := strings.Split(url, " ")
+	if len(parts) > 1 {
+		return false
+	}
+
+	// at least one dot must be
+	parts = strings.Split(url, ".")
+	if len(parts) < 2 {
+		return false
+	}
+
 	if s.config.MaxUrlLength <= 0 {
 		return url != "" && len(url) <= 500
 	}
@@ -54,7 +67,7 @@ func (s *APIServer) handleCreate() http.HandlerFunc {
 		go func(wg *sync.WaitGroup) {
 			defer wg.Done()
 
-			result, err := s.store.CreateLink(req.Url)
+			result, err := s.store.CreateLink(strings.Trim(req.Url, " "))
 
 			if err != nil {
 				s.error(writer, http.StatusBadRequest, err)
