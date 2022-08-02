@@ -17,7 +17,6 @@ func TestDefaultConfig(t *testing.T) {
 
 	assert.Equal(t, conf.ServerPort, 8080)
 	assert.Equal(t, conf.MaxUrlLength, 300)
-	assert.Equal(t, conf.StoreImpl, "db")
 }
 
 func TestServerGeneralResponse(t *testing.T) {
