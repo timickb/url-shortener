@@ -22,7 +22,6 @@ import (
 var (
 	configSource string
 	configPath   string
-	storeImpl    string
 )
 
 const (
@@ -32,7 +31,6 @@ const (
 func init() {
 	flag.StringVar(&configPath, "config-path", "config.yml", "path to config in filesystem")
 	flag.StringVar(&configSource, "config-source", "env", "config params source priority: env or file")
-	flag.StringVar(&storeImpl, "store", "local", "Data storage way: local, db or improved")
 }
 
 func main() {
@@ -46,7 +44,6 @@ func main() {
 
 func mainNoExit(logger *logrus.Logger) error {
 	config := server.DefaultConfig()
-	config.StoreImpl = storeImpl
 
 	// Parsing configuration
 	if configSource == "file" {
@@ -58,6 +55,8 @@ func mainNoExit(logger *logrus.Logger) error {
 	} else {
 		return fmt.Errorf("incorrect config source %s. Use 'file' or 'env'", configSource)
 	}
+
+	fmt.Println(config.Origins)
 
 	db, err := createPostgresConn(config)
 
@@ -129,10 +128,6 @@ func parseConfigFromEnvironment(config *server.Config) {
 	}
 	if os.Getenv("SHORTENING_SIZE") != "" {
 		config.ShorteningSize, _ = strconv.Atoi(os.Getenv("SHORTENING_SIZE"))
-	}
-
-	if os.Getenv("STORE_WAY") != "" {
-		config.StoreImpl = os.Getenv("STORE_WAY")
 	}
 }
 
