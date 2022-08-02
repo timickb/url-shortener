@@ -13,13 +13,12 @@ type Config struct {
 	MaxUrlLength   int      `yaml:"max_url_length"`
 	ShorteningSize int      `yaml:"shortening_size"`
 	Database       DbConfig `yaml:"database"`
-	StoreImpl      string
+	Origins        []string `yaml:"origins"`
 }
 
 func DefaultConfig() *Config {
 	return &Config{
 		ServerPort:     8080,
-		StoreImpl:      "db",
 		MaxUrlLength:   300,
 		ShorteningSize: 10,
 	}

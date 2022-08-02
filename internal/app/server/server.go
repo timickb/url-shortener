@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"github.com/timickb/url-shortener/internal/app/store"
@@ -43,18 +44,18 @@ func New(options ...func(s *APIServer)) *APIServer {
 	}
 
 	if srv.logger == nil {
-		fmt.Println("Logger not specidied. Using default")
 		srv.logger = logrus.New()
+		srv.logger.Info("Logger not specidied. Using default")
 	}
 
 	if srv.store == nil {
-		fmt.Println("Store not specified. Using default")
+		srv.logger.Info("Store not specified. Using default")
 		srv.store = store.New()
 		srv.store.Open()
 	}
 
 	if srv.config == nil {
-		fmt.Println("Config not specified. Using default")
+		srv.logger.Info("Config not specified. Using default")
 		srv.config = DefaultConfig()
 	}
 
@@ -67,7 +68,18 @@ func New(options ...func(s *APIServer)) *APIServer {
 
 func (s *APIServer) Start() error {
 	s.logger.Info(fmt.Sprintf("Starting server on port %d", s.config.ServerPort))
-	return http.ListenAndServe(":"+strconv.Itoa(s.config.ServerPort), s.router)
+
+	headers := handlers.AllowedHeaders([]string{"Content-Type", "Authorization"})
+	methods := handlers.AllowedMethods([]string{"GET", "POST"})
+	origins := handlers.AllowedOrigins([]string{"*"})
+
+	if len(s.config.Origins) > 0 {
+		origins = handlers.AllowedOrigins(s.config.Origins)
+	}
+
+	return http.ListenAndServe(
+		":"+strconv.Itoa(s.config.ServerPort),
+		handlers.CORS(headers, methods, origins)(s.router))
 }
 
 func (s *APIServer) Close() error {
