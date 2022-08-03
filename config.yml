@@ -8,3 +8,8 @@ database:
   db_user: "timickb"
   db_password: ""
   db_port: 5432
+
+
+# if empty, all origins are allowed
+origins:
+  - http://localhost:9000
